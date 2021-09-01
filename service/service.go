@@ -116,10 +116,8 @@ func main() {
 		}
 	}()
 
-	select {
-	case <-sigs:
-		logrus.Info("Shutting down")
-		os.Exit(0)
-	}
+	<-sigs
+	logrus.Info("Shutting down")
+	os.Exit(0)
 
 }
