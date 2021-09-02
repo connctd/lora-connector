@@ -3,9 +3,11 @@ package mysql
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/connctd/connector-go"
+	"github.com/connctd/lora-connector/lorawan/decoder"
 	"github.com/connctd/restapi-go"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -77,7 +79,7 @@ var configThing = restapi.Thing{
 					Parameters: []restapi.ActionParameter{
 						{
 							Name: "ApplicationId",
-							Type: restapi.ValueTypeString,
+							Type: restapi.ValueTypeNumber,
 						},
 						{
 							Name: "PayloadDecoder",
@@ -164,6 +166,54 @@ func (d *DB) AddInstance(ctx context.Context, req connector.InstantiationRequest
 
 	db.Commit()
 	return nil
+}
+
+func (d *DB) PerformAction(ctx context.Context, req connector.ActionRequest) (*connector.ActionResponse, error) {
+	var instance Instance
+	err := d.db.WithContext(ctx).Model(&Instance{}).Where("config_thing_id = ?", req.ThingID).Error
+	if err != nil {
+		return &connector.ActionResponse{
+			Status: restapi.ActionRequestStatusCanceled,
+			Error:  err.Error(),
+		}, err
+	}
+	if req.ActionID != "addmapping" || req.ComponentID != "lora" {
+		return &connector.ActionResponse{
+			Status: restapi.ActionRequestStatusCanceled,
+			Error:  "Invalid action or component ID",
+		}, nil
+	}
+	appIdString := req.Parameters["ApplicationId"]
+	appId, err := strconv.ParseUint(appIdString, 10, 64)
+	if err != nil {
+		return &connector.ActionResponse{
+			Status: restapi.ActionRequestStatusCanceled,
+			Error:  "Invalid LoRaWAN application id",
+		}, nil
+	}
+	decoderName := req.Parameters["PayloadDecoder"]
+	dec := decoder.GetDecoder(decoderName)
+	if dec == nil {
+		return &connector.ActionResponse{
+			Status: restapi.ActionRequestStatusCanceled,
+			Error:  "Invalid decoder name",
+		}, nil
+	}
+	config := DecoderConfig{
+		ApplicationID: appId,
+		DecoderName:   decoderName,
+		InstanceID:    instance.ID,
+	}
+	err = d.db.WithContext(ctx).Create(config).Error
+	if err != nil {
+		return &connector.ActionResponse{
+			Status: restapi.ActionRequestStatusCanceled,
+			Error:  "Internal Error",
+		}, err
+	}
+	return &connector.ActionResponse{
+		Status: restapi.ActionRequestStatusCompleted,
+	}, nil
 }
 
 func (d *DB) GetInstallationToken(installationId string) (connector.InstallationToken, error) {
