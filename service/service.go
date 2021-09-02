@@ -68,7 +68,17 @@ func main() {
 		logrus.Fatal("Failed to read database DSN from config, please set db.dsn value")
 	}
 
-	db, err := mysql.NewDB(dsn)
+	host := viper.GetString("http.host")
+	if host == "" {
+		logrus.Fatal("no http.host configured. Please set http.host to the public host the connector is reachable under")
+	}
+
+	apiClient, err := connector.NewClient(connector.DefaultOptions(), connector.DefaultLogger)
+	if err != nil {
+		logrus.WithError(err).Fatalln("Failed to setup connctd client")
+	}
+
+	db, err := mysql.NewDB(dsn, apiClient, host)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to connect to database")
 	}
@@ -83,23 +93,13 @@ func main() {
 	}
 	pubKey := ed25519.PublicKey(pubKeyBytes)
 
-	apiClient, err := connector.NewClient(connector.DefaultOptions(), connector.DefaultLogger)
-	if err != nil {
-		logrus.WithError(err).Fatalln("Failed to setup connctd client")
-	}
-
 	r := mux.NewRouter()
 
 	loraWANHandler := lorawan.NewLoRaWANHandler(apiClient, true, db)
-	r.PathPrefix("/lorawan").Handler(loraWANHandler)
+	r.Path("/lorawan/{installationId}/{instanceId}").Methods(http.MethodPost, http.MethodPut).Handler(loraWANHandler)
 	cr := r.PathPrefix("/connector").Subrouter()
 
 	service := noopActionService{*db}
-
-	host := viper.GetString("http.host")
-	if host == "" {
-		logrus.Fatal("no http.host configured. Please set http.host to the public host the connector is reachable under")
-	}
 
 	connhttp.NewConnectorHandler(cr, &service, "", pubKey)
 

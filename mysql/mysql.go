@@ -3,8 +3,10 @@ package mysql
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/connctd/connector-go"
+	"github.com/connctd/restapi-go"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -21,6 +23,7 @@ type Instance struct {
 	Token          string
 	InstallationID string        `gorm:"REFERENCES installations(id)"`
 	Installation   *Installation `gorm:"foreignKey:InstallationID;AssociationForeignKey:ID"`
+	ConfigThingID  string        `gorm:"uniqueIndex"`
 }
 
 type IDMapping struct {
@@ -39,18 +42,72 @@ type DecoderConfig struct {
 	Instance      *Instance `gorm:"foreignKey:InstanceID;AssociationForeignKey:ID"`
 }
 
-type DB struct {
-	db *gorm.DB
+var configThing = restapi.Thing{
+	Name:         "configuration Thin",
+	Manufacturer: "IoT connctd GmbH",
+	DisplayType:  "loranetwork",
+	Status:       restapi.StatusTypeAvailable,
+	Components: []restapi.Component{
+		{
+			ID:            "lora",
+			Name:          "LoRaWAN config",
+			ComponentType: "config",
+			Capabilities:  []string{"loraconfig"},
+			Properties: []restapi.Property{
+				{
+					ID:           "url",
+					Name:         "HTTP Callback URL",
+					Value:        "",
+					Unit:         "",
+					Type:         restapi.ValueTypeString,
+					PropertyType: "URL",
+				},
+				{
+					ID:    "decoders",
+					Name:  "Decoders",
+					Value: "",
+					Unit:  "",
+					Type:  restapi.ValueTypeString,
+				},
+			},
+			Actions: []restapi.Action{
+				{
+					ID:   "addmapping",
+					Name: "AddMapping",
+					Parameters: []restapi.ActionParameter{
+						{
+							Name: "ApplicationId",
+							Type: restapi.ValueTypeString,
+						},
+						{
+							Name: "PayloadDecoder",
+							Type: restapi.ValueTypeString,
+						},
+					},
+				},
+			},
+		},
+	},
 }
 
-func NewDB(dsn string) (*DB, error) {
+type DB struct {
+	db              *gorm.DB
+	connectorClient connector.Client
+	host            string
+}
+
+func NewDB(dsn string, connectorClient connector.Client, host string) (*DB, error) {
 	gdb, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		SkipDefaultTransaction: true,
 	})
 	if err != nil {
 		return nil, err
 	}
-	d := &DB{db: gdb}
+	d := &DB{
+		db:              gdb,
+		connectorClient: connectorClient,
+		host:            host,
+	}
 	if err := d.CreateOrMigrate(); err != nil {
 		return nil, err
 	}
@@ -81,14 +138,32 @@ func (d *DB) AddInstallation(ctx context.Context, req connector.InstallationRequ
 	return
 }
 
-func (d *DB) AddInstance(ctx context.Context, req connector.InstantiationRequest) (err error) {
+func (d *DB) AddInstance(ctx context.Context, req connector.InstantiationRequest) error {
 	instance := Instance{
 		ID:             req.ID,
 		Token:          string(req.Token),
 		InstallationID: req.InstallationID,
 	}
-	err = d.db.WithContext(ctx).Create(instance).Error
-	return
+	// TODO add config thing
+	db := d.db.WithContext(ctx).Begin()
+	defer db.Rollback()
+	configThing, err := d.connectorClient.CreateThing(ctx, req.Token, configThing)
+	if err != nil {
+		return err
+	}
+	instance.ConfigThingID = configThing.ID
+	err = db.WithContext(ctx).Create(instance).Error
+	if err != nil {
+		return err
+	}
+	callbackUrl := fmt.Sprintf("https://%s/lorawan/%s/%s", d.host, req.InstallationID, req.ID)
+	err = d.connectorClient.UpdateThingPropertyValue(ctx, req.Token, instance.ConfigThingID, "lora", "url", callbackUrl, time.Now())
+	if err != nil {
+		return err
+	}
+
+	db.Commit()
+	return nil
 }
 
 func (d *DB) GetInstallationToken(installationId string) (connector.InstallationToken, error) {

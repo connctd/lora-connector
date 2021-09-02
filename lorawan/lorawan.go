@@ -47,7 +47,7 @@ func NewLoRaWANHandler(connectorClient connector.Client, useJson bool, dataStore
 	return l
 }
 
-// Handler under form of .../{instanceId}/{installationId}
+// Handler under form of .../{installationId}/{instanceId}
 func (l *LoRaWANHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	instanceID := vars["instanceId"]
