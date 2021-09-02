@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/ed25519"
 	"encoding/base64"
 	"flag"
@@ -19,18 +18,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
-
-type noopActionService struct {
-	mysql.DB
-}
-
-func (n *noopActionService) PerformAction(ctx context.Context, req connector.ActionRequest) (*connector.ActionResponse, error) {
-	logrus.Error("Actions are not implemented yet in this service")
-	return nil, connhttp.Error{
-		Code:    http.StatusNotImplemented,
-		Message: "Actions are not implemented",
-	}
-}
 
 func setDefaults() {
 	viper.SetDefault("http.addr", ":8088")
@@ -99,9 +86,7 @@ func main() {
 	r.Path("/lorawan/{installationId}/{instanceId}").Methods(http.MethodPost, http.MethodPut).Handler(loraWANHandler)
 	cr := r.PathPrefix("/connector").Subrouter()
 
-	service := noopActionService{*db}
-
-	connhttp.NewConnectorHandler(cr, &service, "", pubKey)
+	connhttp.NewConnectorHandler(cr, db, "", pubKey)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
