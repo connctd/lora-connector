@@ -20,11 +20,12 @@ type ldds75decoder struct{}
 
 func (d ldds75decoder) Device(attributes []restapi.ThingAttribute) (*restapi.Thing, error) {
 	return &restapi.Thing{
-		Name:         "LDDS75",
-		Manufacturer: "Dragino",
-		DisplayType:  "sensor",
-		Status:       restapi.StatusTypeAvailable,
-		Attributes:   attributes,
+		Name:            "LDDS75",
+		Manufacturer:    "Dragino",
+		DisplayType:     "SENSOR",
+		Status:          restapi.StatusTypeAvailable,
+		Attributes:      attributes,
+		MainComponentID: "waterlevel",
 		Components: []restapi.Component{
 			{
 				ID:            "waterlevel",
