@@ -38,7 +38,34 @@ func (d ldds75decoder) Device(attributes []restapi.ThingAttribute) (*restapi.Thi
 						Name:         "Waterlevel",
 						Value:        "",
 						Unit:         "CENTIMETER",
-						PropertyType: "core.WATERLEVEL",
+						PropertyType: "core.NUMBER",
+					},
+				},
+			},
+			{
+				ID:            "configuration",
+				Name:          "Configuration",
+				ComponentType: "dragino.CONFIGURATION",
+				Capabilities:  []string{},
+				Properties: []restapi.Property{
+					{
+						ID:           "mountingHeight",
+						Name:         "Mounting Height",
+						Value:        "0",
+						Unit:         "CENTIMETER",
+						PropertyType: "core.NUMBER",
+					},
+				},
+				Actions: []restapi.Action{
+					{
+						ID:   "setMountingHeight",
+						Name: "SetMountingHeight",
+						Parameters: []restapi.ActionParameter{
+							{
+								Name: "mountingHeight",
+								Type: restapi.ValueTypeNumber,
+							},
+						},
 					},
 				},
 			},
