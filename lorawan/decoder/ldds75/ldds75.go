@@ -67,7 +67,7 @@ func (d ldds75decoder) Device(attributes []restapi.ThingAttribute) (*restapi.Thi
 	}, nil
 }
 
-func (d ldds75decoder) DecodeMessage(fport uint32, msg []byte, thingID string) ([]decoder.PropertyUpdate, error) {
+func (d ldds75decoder) DecodeMessage(store decoder.DecoderStateStore, fport uint32, msg []byte, thingID string) ([]decoder.PropertyUpdate, error) {
 	// Ignore fport, device seems to only transmit on port 2
 	if len(msg) < 2 {
 		return nil, errors.New("message shorter than 2 bytes")

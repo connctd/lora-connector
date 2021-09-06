@@ -9,6 +9,11 @@ import (
 
 var decoders = map[string]PayloadDecoder{}
 
+type DecoderStateStore interface {
+	GetState(thingID, key string) ([]byte, error)
+	SetState(thingId, key string, value []byte) error
+}
+
 func RegisterDecoder(name string, decoder PayloadDecoder) {
 	if _, exists := decoders[name]; exists {
 		panic(fmt.Errorf("PayloadDecoder with name %s alrady exists", name))
@@ -30,5 +35,5 @@ type PropertyUpdate struct {
 
 type PayloadDecoder interface {
 	Device(attributes []restapi.ThingAttribute) (*restapi.Thing, error)
-	DecodeMessage(fport uint32, msg []byte, thingID string) ([]PropertyUpdate, error)
+	DecodeMessage(store DecoderStateStore, fport uint32, msg []byte, thingID string) ([]PropertyUpdate, error)
 }

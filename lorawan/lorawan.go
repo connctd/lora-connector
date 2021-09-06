@@ -23,6 +23,7 @@ import (
 )
 
 type dataStore interface {
+	decoder.DecoderStateStore
 	MapDevEUIToThingID(instanceID string, devEUI []byte) (string, error)
 	StoreDEVUIToThingID(instanceID string, devEUI []byte, thingID string) error
 	GetInstallationToken(installationId string) (connector.InstallationToken, error)
@@ -159,7 +160,7 @@ func (l *LoRaWANHandler) HandleRequest(token connector.InstantiationToken, insta
 
 		logger = logger.WithField("thingID", thingID)
 
-		updates, err := payloadDecoder.DecodeMessage(fport, msg, thingID)
+		updates, err := payloadDecoder.DecodeMessage(l.store, fport, msg, thingID)
 		if err != nil {
 			logger.WithField("deviceEUI", deviceID).WithError(err).Error("Failed to decode message of LoRaWAN device")
 			http.Error(w, "internal error", http.StatusInternalServerError)
