@@ -8,6 +8,7 @@ import (
 
 	"github.com/connctd/lora-connector/lorawan/decoder"
 	"github.com/connctd/restapi-go"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -119,11 +120,29 @@ func (d ldds75decoder) DecodeMessage(store decoder.DecoderStateStore, fport uint
 		// if message is shorter, the distance sensor is not connected. We should signal this somehow
 		distanceRaw := binary.BigEndian.Uint16(msg[2:4]) // distance in mm
 		if distanceRaw > 20 {                            // Values smaller than 20 indicate invalid readings
+
+			val, err := store.GetState(thingID, "mountingHeight")
+			if err != nil {
+				if err == gorm.ErrRecordNotFound {
+					val = make([]byte, 4)
+					n := binary.PutVarint(val, 0)
+					err = store.SetState(thingID, "mountingHeight", val[:n])
+					if err != nil {
+						return nil, err
+					}
+					val = val[:n]
+				} else {
+					return nil, err
+				}
+
+			}
+			mountingHeightInt, _ := binary.Varint(val)
+			mountingHeight := float64(mountingHeightInt) / 10.0
 			updates = append(updates, decoder.PropertyUpdate{
 				ThingID:     thingID,
 				ComponentID: "waterlevel",
 				PropertyID:  "waterlevel",
-				Value:       fmt.Sprintf("%f", float32(distanceRaw)/10.0),
+				Value:       fmt.Sprintf("%f", (mountingHeight - float64(distanceRaw)/10.0)),
 			})
 
 		}
