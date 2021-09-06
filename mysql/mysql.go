@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"strconv"
 	"time"
@@ -171,15 +172,59 @@ func (d *DB) AddInstance(ctx context.Context, req connector.InstantiationRequest
 func (d *DB) PerformAction(ctx context.Context, req connector.ActionRequest) (*connector.ActionResponse, error) {
 	var instance Instance
 	err := d.db.WithContext(ctx).Model(&Instance{}).Where("config_thing_id = ?", req.ThingID).Error
-	if err != nil {
+	if err == nil {
+		return d.performConfigThingAction(ctx, instance, req)
+	}
+	if err == gorm.ErrRecordNotFound {
+		var mapping IDMapping
+		err = d.db.Model(&IDMapping{}).Where("thing_id = ?", req.ThingID).Take(&mapping).Error
+		if err != nil && err == gorm.ErrRecordNotFound {
+			return &connector.ActionResponse{
+				Status: restapi.ActionRequestStatusFailed,
+				Error:  "thing does not exist",
+			}, nil
+		} else if err != nil {
+			return &connector.ActionResponse{
+				Status: restapi.ActionRequestStatusFailed,
+				Error:  "Internal Error",
+			}, err
+		}
+		return d.performLoraThingAction(ctx, req)
+	} else {
 		return &connector.ActionResponse{
-			Status: restapi.ActionRequestStatusCanceled,
+			Status: restapi.ActionRequestStatusFailed,
 			Error:  err.Error(),
 		}, err
 	}
+}
+
+func (d *DB) performLoraThingAction(ctx context.Context, req connector.ActionRequest) (*connector.ActionResponse, error) {
+	mountingHeight, err := strconv.ParseFloat(req.Parameters["mountingHeight"], 64)
+	if err != nil {
+		return &connector.ActionResponse{
+			Status: restapi.ActionRequestStatusFailed,
+			Error:  "Invalid paramater 'mountingHeight'. Needs to be mounting height in centimeters as float number",
+		}, nil
+	}
+	buf := make([]byte, 4)
+	mountingHeightInt := int64(mountingHeight * 10)
+	n := binary.PutVarint(buf, mountingHeightInt)
+	err = d.SetState(req.ThingID, "mountingHeight", buf[:n])
+	if err != nil {
+		return &connector.ActionResponse{
+			Status: restapi.ActionRequestStatusFailed,
+			Error:  "Internal Error",
+		}, err
+	}
+	return &connector.ActionResponse{
+		Status: restapi.ActionRequestStatusCompleted,
+	}, nil
+}
+
+func (d *DB) performConfigThingAction(ctx context.Context, instance Instance, req connector.ActionRequest) (*connector.ActionResponse, error) {
 	if req.ActionID != "addmapping" || req.ComponentID != "lora" {
 		return &connector.ActionResponse{
-			Status: restapi.ActionRequestStatusCanceled,
+			Status: restapi.ActionRequestStatusFailed,
 			Error:  "Invalid action or component ID",
 		}, nil
 	}
@@ -187,7 +232,7 @@ func (d *DB) PerformAction(ctx context.Context, req connector.ActionRequest) (*c
 	appId, err := strconv.ParseUint(appIdString, 10, 64)
 	if err != nil {
 		return &connector.ActionResponse{
-			Status: restapi.ActionRequestStatusCanceled,
+			Status: restapi.ActionRequestStatusFailed,
 			Error:  "Invalid LoRaWAN application id",
 		}, nil
 	}
@@ -195,7 +240,7 @@ func (d *DB) PerformAction(ctx context.Context, req connector.ActionRequest) (*c
 	dec := decoder.GetDecoder(decoderName)
 	if dec == nil {
 		return &connector.ActionResponse{
-			Status: restapi.ActionRequestStatusCanceled,
+			Status: restapi.ActionRequestStatusFailed,
 			Error:  "Invalid decoder name",
 		}, nil
 	}
@@ -207,7 +252,7 @@ func (d *DB) PerformAction(ctx context.Context, req connector.ActionRequest) (*c
 	err = d.db.WithContext(ctx).Create(config).Error
 	if err != nil {
 		return &connector.ActionResponse{
-			Status: restapi.ActionRequestStatusCanceled,
+			Status: restapi.ActionRequestStatusFailed,
 			Error:  "Internal Error",
 		}, err
 	}
