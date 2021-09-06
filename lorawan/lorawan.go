@@ -63,7 +63,7 @@ func (l *LoRaWANHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"instanceId":     instanceID,
 		"installationId": installationID,
 	})
-	instance, err := l.store.GetInstance(installationID)
+	instance, err := l.store.GetInstance(instanceID)
 	if err != nil {
 		logger.WithError(err).Error("Failed to retrieve installation token")
 		http.Error(w, "internal failure", http.StatusInternalServerError)
@@ -76,7 +76,7 @@ func (l *LoRaWANHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-	l.HandleRequest(instance.Token, installationID, w, r)
+	l.HandleRequest(instance.Token, instanceID, w, r)
 }
 
 func (l *LoRaWANHandler) HandleRequest(token connector.InstantiationToken, instanceID string, w http.ResponseWriter, r *http.Request) {
