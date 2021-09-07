@@ -19,6 +19,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+var (
+	Version = "undefined"
+)
+
 func setDefaults() {
 	viper.SetDefault("http.addr", ":8088")
 	viper.SetDefault("log.level", logrus.InfoLevel.String())
