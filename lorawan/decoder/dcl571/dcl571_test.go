@@ -17,6 +17,12 @@ func TestDecodePressureValue(t *testing.T) {
 	pressure := decodePressureValue(payload[52:])
 	assert.EqualValues(t, float32(4.0280643), pressure)
 
-	maxPressure := decodePressureValue(payload[28:])
-	assert.EqualValues(t, float32(4007.555420), maxPressure)
+	pressureLimit := decodePressureValue(payload[28:])
+	assert.EqualValues(t, float32(4007.555420), pressureLimit)
+
+	maxPressure := decodePressureValue(payload[64:])
+	assert.EqualValues(t, float32(4.806449), maxPressure)
+
+	minPressure := decodePressureValue(payload[76:])
+	assert.EqualValues(t, float32(1.1091806), minPressure)
 }
