@@ -6,7 +6,7 @@ PROJECT_NAME			= lora-connector
 LDFLAGS                	?= -X main.Version=$(VERSION) -w -s
 GO_ENV                  = CGO_ENABLED=0
 
-GO_BUILD                = $(GO_ENV) go build -ldflags "$(LDFLAGS)"
+GO_BUILD                = $(GO_ENV) go build -mod=vendor -ldflags "$(LDFLAGS)"
 GO_TEST                 = $(GO_ENV) go test -cover -v
 
 GCR_PROJECT_ID 			?= molten-mariner-162315
