@@ -91,6 +91,7 @@ func main() {
 	pubKey := ed25519.PublicKey(pubKeyBytes)
 
 	r := mux.NewRouter()
+	r.Path("/health").Methods(http.MethodGet).HandlerFunc(simpleHealthHandler)
 
 	loraWANHandler := lorawan.NewLoRaWANHandler(apiClient, true, db)
 	r.Path("/lorawan/{installationId}/{instanceId}").Methods(http.MethodPost, http.MethodPut).Handler(loraWANHandler)
@@ -117,4 +118,8 @@ func main() {
 	logrus.Info("Shutting down")
 	os.Exit(0)
 
+}
+
+func simpleHealthHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
