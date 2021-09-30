@@ -111,9 +111,6 @@ func NewDB(dsn string, connectorClient connector.Client, host string) (*DB, erro
 		connectorClient: connectorClient,
 		host:            host,
 	}
-	if err := d.CreateOrMigrate(); err != nil {
-		return nil, err
-	}
 	return d, nil
 }
 
