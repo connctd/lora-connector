@@ -3,10 +3,15 @@ package dcl571
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
+	"time"
 
 	"github.com/connctd/lora-connector/lorawan/decoder"
 	"github.com/connctd/restapi-go"
+	"gorm.io/gorm"
 )
+
+const metersPerBar = 10.1972
 
 func init() {
 	decoder.RegisterDecoder("dcl571", dcl571decoder{})
@@ -51,6 +56,34 @@ func (d dcl571decoder) Device(attributes []restapi.ThingAttribute) (*restapi.Thi
 						Unit:         "Bar",
 						PropertyType: "core.NUMBER",
 					},
+					{
+						ID:           "maxPressure",
+						Name:         "maxPressure",
+						Value:        "",
+						Unit:         "Bar",
+						PropertyType: "core.NUMBER",
+					},
+					{
+						ID:           "minPressure",
+						Name:         "minPressure",
+						Value:        "",
+						Unit:         "Bar",
+						PropertyType: "core.NUMBER",
+					},
+					{
+						ID:           "pressureUpperLimit",
+						Name:         "pressureUpperLimit",
+						Value:        "",
+						Unit:         "Bar",
+						PropertyType: "core.NUMBER",
+					},
+					{
+						ID:           "pressureLowerLimit",
+						Name:         "pressureLowerLimit",
+						Value:        "",
+						Unit:         "Bar",
+						PropertyType: "core.NUMBER",
+					},
 				},
 			},
 			{
@@ -60,8 +93,8 @@ func (d dcl571decoder) Device(attributes []restapi.ThingAttribute) (*restapi.Thi
 				Capabilities:  []string{},
 				Properties: []restapi.Property{
 					{
-						ID:           "mountingHeight",
-						Name:         "Mounting Height",
+						ID:           "waterLevelOffset",
+						Name:         "water level offset",
 						Value:        "0",
 						Unit:         "CENTIMETER",
 						PropertyType: "core.NUMBER",
@@ -87,7 +120,71 @@ func (d dcl571decoder) Device(attributes []restapi.ThingAttribute) (*restapi.Thi
 func (d dcl571decoder) DecodeMessage(store decoder.DecoderStateStore, fport uint32, msg []byte, thingID string) ([]decoder.PropertyUpdate, error) {
 	updates := []decoder.PropertyUpdate{}
 
-	// pressureBytes := msg[53:59] //54:60
+	upperPressureLimit := decodePressureValue(msg[28:])
+	updates = append(updates, decoder.PropertyUpdate{
+		ThingID:     thingID,
+		ComponentID: "pressure",
+		PropertyID:  "pressureUpperLimit",
+		Value:       fmt.Sprintf("%f", upperPressureLimit),
+		UpdateTime:  time.Now(),
+	})
+	lowerPressureLimit := decodePressureValue(msg[40:])
+	updates = append(updates, decoder.PropertyUpdate{
+		ThingID:     thingID,
+		ComponentID: "pressure",
+		PropertyID:  "pressureLowerLimit",
+		Value:       fmt.Sprintf("%f", lowerPressureLimit),
+		UpdateTime:  time.Now(),
+	})
+	pressure := decodePressureValue(msg[52:])
+	updates = append(updates, decoder.PropertyUpdate{
+		ThingID:     thingID,
+		ComponentID: "pressure",
+		PropertyID:  "pressure",
+		Value:       fmt.Sprintf("%f", pressure),
+		UpdateTime:  time.Now(),
+	})
+	maxPressure := decodePressureValue(msg[64:])
+	updates = append(updates, decoder.PropertyUpdate{
+		ThingID:     thingID,
+		ComponentID: "pressure",
+		PropertyID:  "maxPressure",
+		Value:       fmt.Sprintf("%f", maxPressure),
+		UpdateTime:  time.Now(),
+	})
+	minPressure := decodePressureValue(msg[76:])
+	updates = append(updates, decoder.PropertyUpdate{
+		ThingID:     thingID,
+		ComponentID: "pressure",
+		PropertyID:  "minPressure",
+		Value:       fmt.Sprintf("%f", minPressure),
+		UpdateTime:  time.Now(),
+	})
+	val, err := store.GetState(thingID, "waterLevelOffset")
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			val = make([]byte, 4)
+			n := binary.PutVarint(val, 0)
+			err = store.SetState(thingID, "waterLevelOffset", val[:n])
+			if err != nil {
+				return nil, err
+			}
+			val = val[:n]
+		} else {
+			return nil, err
+		}
+	}
+	waterLevelOffsetMM, _ := binary.Varint(val)
+	waterLevelOffset := float64(waterLevelOffsetMM) / 10.0
+	waterLevel := waterLevelOffset/100.0 + (float64(pressure) * metersPerBar)
+
+	updates = append(updates, decoder.PropertyUpdate{
+		ThingID:     thingID,
+		ComponentID: "waterlevel",
+		PropertyID:  "waterlevel",
+		Value:       fmt.Sprintf("%f", waterLevel*100.0),
+		UpdateTime:  time.Now(),
+	})
 
 	return updates, nil
 }

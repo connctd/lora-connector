@@ -199,23 +199,45 @@ func (d *DB) PerformAction(ctx context.Context, req connector.ActionRequest) (*c
 }
 
 func (d *DB) performLoraThingAction(ctx context.Context, req connector.ActionRequest) (*connector.ActionResponse, error) {
-	mountingHeight, err := strconv.ParseFloat(req.Parameters["mountingHeight"], 64)
-	if err != nil {
-		return &connector.ActionResponse{
-			Status: restapi.ActionRequestStatusFailed,
-			Error:  "Invalid paramater 'mountingHeight'. Needs to be mounting height in centimeters as float number",
-		}, nil
+	if req.ActionID == "setMountingHeight" {
+		mountingHeight, err := strconv.ParseFloat(req.Parameters["mountingHeight"], 64)
+		if err != nil {
+			return &connector.ActionResponse{
+				Status: restapi.ActionRequestStatusFailed,
+				Error:  "Invalid paramater 'mountingHeight'. Needs to be mounting height in centimeters as float number",
+			}, nil
+		}
+		buf := make([]byte, 4)
+		mountingHeightInt := int64(mountingHeight * 10.0)
+		n := binary.PutVarint(buf, mountingHeightInt)
+		err = d.SetState(req.ThingID, "mountingHeight", buf[:n])
+		if err != nil {
+			return &connector.ActionResponse{
+				Status: restapi.ActionRequestStatusFailed,
+				Error:  "Internal Error",
+			}, err
+		}
+	} else if req.ActionID == "setWaterLevelOffset" {
+		waterLevelOffset, err := strconv.ParseFloat(req.Parameters["offset"], 64)
+		if err != nil {
+			return &connector.ActionResponse{
+				Status: restapi.ActionRequestStatusFailed,
+				Error:  "Invalid paramater 'offset'. Needs to be offset in centimeters as float number",
+			}, nil
+		}
+
+		buf := make([]byte, 4)
+		waterLevelOffsetInt := int64(waterLevelOffset * 10.0)
+		n := binary.PutVarint(buf, waterLevelOffsetInt)
+		err = d.SetState(req.ThingID, "waterLevelOffset", buf[:n])
+		if err != nil {
+			return &connector.ActionResponse{
+				Status: restapi.ActionRequestStatusFailed,
+				Error:  "Internal Error",
+			}, err
+		}
 	}
-	buf := make([]byte, 4)
-	mountingHeightInt := int64(mountingHeight * 10)
-	n := binary.PutVarint(buf, mountingHeightInt)
-	err = d.SetState(req.ThingID, "mountingHeight", buf[:n])
-	if err != nil {
-		return &connector.ActionResponse{
-			Status: restapi.ActionRequestStatusFailed,
-			Error:  "Internal Error",
-		}, err
-	}
+
 	return &connector.ActionResponse{
 		Status: restapi.ActionRequestStatusCompleted,
 	}, nil
