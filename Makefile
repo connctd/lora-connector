@@ -9,10 +9,16 @@ GO_ENV                  = CGO_ENABLED=0
 GO_BUILD                = $(GO_ENV) go build -ldflags "$(LDFLAGS)"
 GO_TEST                 = $(GO_ENV) go test -cover -v
 
-.PHONY: clean build test
+GCR_PROJECT_ID 			?= molten-mariner-162315
+GCR_IMAGE 				?= eu.gcr.io/$(GCR_PROJECT_ID)/connctd/$(PROJECT_NAME)
 
-$(PROJECT_NAME):
+.PHONY: clean build test docker
+
+$(PROJECT_NAME): test
 	$(GO_BUILD) -o $(PROJECT_NAME) ./service
+
+$(PROJECT_NAME)_linux_amd64: test
+	GOARCH=amd64 GOOS=linux $(GO_BUILD) -o $(PROJECT_NAME)_linux_amd64 ./service
 
 build: $(PROJECT_NAME)
 
@@ -21,5 +27,11 @@ test:
 
 clean: 
 	rm -f ./$(PROJECT_NAME)
+
+docker: $(PROJECT_NAME)_linux_amd64
+	docker build \
+		--file Dockerfile \
+		--rm \
+		--tag "$(GCR_IMAGE):$(VERSION)" .
 
 rebuild: clean build
