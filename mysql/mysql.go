@@ -68,7 +68,7 @@ var configThing = restapi.Thing{
 				{
 					ID:    "decoders",
 					Name:  "Decoders",
-					Value: "ldds75",
+					Value: "ldds75,dcl571",
 					Unit:  "",
 					Type:  restapi.ValueTypeString,
 				},
