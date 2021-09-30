@@ -13,6 +13,8 @@ import (
 	"github.com/connctd/connector-go"
 	"github.com/connctd/lora-connector/connhttp"
 	"github.com/connctd/lora-connector/lorawan"
+	_ "github.com/connctd/lora-connector/lorawan/decoder/dcl571"
+	_ "github.com/connctd/lora-connector/lorawan/decoder/ldds75"
 	"github.com/connctd/lora-connector/mysql"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
