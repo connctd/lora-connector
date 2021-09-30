@@ -5,10 +5,8 @@
 replicaCount: 1
 
 image:
-  repository: nginx
+  repository: eu.gcr.io/molten-mariner-162315/connctd/lora-connector
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
