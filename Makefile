@@ -12,7 +12,7 @@ GO_TEST                 = $(GO_ENV) go test -cover -v
 GCR_PROJECT_ID 			?= molten-mariner-162315
 GCR_IMAGE 				?= eu.gcr.io/$(GCR_PROJECT_ID)/connctd/$(PROJECT_NAME)
 
-.PHONY: clean build test docker
+.PHONY: clean build test docker docker/push
 
 $(PROJECT_NAME): test
 	$(GO_BUILD) -o $(PROJECT_NAME) ./service
@@ -33,5 +33,8 @@ docker: $(PROJECT_NAME)_linux_amd64
 		--file Dockerfile \
 		--rm \
 		--tag "$(GCR_IMAGE):$(VERSION)" .
+
+docker/push:
+	docker push "$(GCR_IMAGE):$(VERSION)"
 
 rebuild: clean build
