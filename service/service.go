@@ -14,6 +14,7 @@ import (
 	"github.com/connctd/lora-connector/connhttp"
 	"github.com/connctd/lora-connector/lorawan"
 	"github.com/connctd/lora-connector/mysql"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -54,33 +55,36 @@ func readConfig() {
 func main() {
 	readConfig()
 
+	logger := logrus.WithField("version", Version)
+
 	dsn := viper.GetString("db.dsn")
 	if dsn == "" {
-		logrus.Fatal("Failed to read database DSN from config, please set db.dsn value")
+		logger.Fatal("Failed to read database DSN from config, please set db.dsn value")
 	}
 
 	host := viper.GetString("http.host")
 	if host == "" {
-		logrus.Fatal("no http.host configured. Please set http.host to the public host the connector is reachable under")
+		logger.Fatal("no http.host configured. Please set http.host to the public host the connector is reachable under")
 	}
+	logger = logger.WithField("host", host)
 
 	apiClient, err := connector.NewClient(connector.DefaultOptions(), connector.DefaultLogger)
 	if err != nil {
-		logrus.WithError(err).Fatalln("Failed to setup connctd client")
+		logger.WithError(err).Fatalln("Failed to setup connctd client")
 	}
 
 	db, err := mysql.NewDB(dsn, apiClient, host)
 	if err != nil {
-		logrus.WithError(err).Fatal("Failed to connect to database")
+		logger.WithError(err).Fatal("Failed to connect to database")
 	}
 
 	base64PubKey := viper.GetString("pubkey")
 	if base64PubKey == "" {
-		logrus.Fatal("Failed to read base64 encoded public key from config, please set 'pubkey' to a valid value")
+		logger.Fatal("Failed to read base64 encoded public key from config, please set 'pubkey' to a valid value")
 	}
 	pubKeyBytes, err := base64.RawStdEncoding.DecodeString(base64PubKey)
 	if err != nil {
-		logrus.WithError(err).Fatal("Failed to decode base64 encoded public key")
+		logger.WithError(err).Fatal("Failed to decode base64 encoded public key")
 	}
 	pubKey := ed25519.PublicKey(pubKeyBytes)
 
@@ -97,11 +101,13 @@ func main() {
 	go func() {
 		server := &http.Server{
 			Addr:    viper.GetString("http.addr"),
-			Handler: r,
+			Handler: handlers.RecoveryHandler(handlers.PrintRecoveryStack(true), handlers.RecoveryLogger(logger))(r),
 		}
 
+		logger.WithField("addr", server.Addr).Info("Listening")
+
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logrus.WithError(err).Error("HTTP server failed")
+			logger.WithError(err).Error("HTTP server failed")
 		}
 	}()
 
