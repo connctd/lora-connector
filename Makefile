@@ -34,7 +34,7 @@ docker: $(PROJECT_NAME)_linux_amd64
 		--rm \
 		--tag "$(GCR_IMAGE):$(VERSION)" .
 
-docker/push:
+docker/push: docker
 	docker push "$(GCR_IMAGE):$(VERSION)"
 
 rebuild: clean build
