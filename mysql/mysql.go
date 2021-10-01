@@ -130,7 +130,7 @@ func (d *DB) CreateOrMigrate() error {
 }
 
 func (d *DB) AddInstallation(ctx context.Context, req connector.InstallationRequest) (err error) {
-	installation := Installation{
+	installation := &Installation{
 		ID:    req.ID,
 		Token: string(req.Token),
 	}
@@ -139,7 +139,7 @@ func (d *DB) AddInstallation(ctx context.Context, req connector.InstallationRequ
 }
 
 func (d *DB) AddInstance(ctx context.Context, req connector.InstantiationRequest) error {
-	instance := Instance{
+	instance := &Instance{
 		ID:             req.ID,
 		Token:          string(req.Token),
 		InstallationID: req.InstallationID,
@@ -168,7 +168,7 @@ func (d *DB) AddInstance(ctx context.Context, req connector.InstantiationRequest
 
 func (d *DB) PerformAction(ctx context.Context, req connector.ActionRequest) (*connector.ActionResponse, error) {
 	var instance Instance
-	err := d.db.WithContext(ctx).Model(&Instance{}).Where("config_thing_id = ?", req.ThingID).Error
+	err := d.db.WithContext(ctx).Model(&Instance{}).Where("config_thing_id = ?", req.ThingID).Take(&instance).Error
 	if err == nil {
 		return d.performConfigThingAction(ctx, instance, req)
 	}
@@ -268,7 +268,7 @@ func (d *DB) performConfigThingAction(ctx context.Context, instance Instance, re
 		DecoderName:   decoderName,
 		InstanceID:    instance.ID,
 	}
-	err = d.db.WithContext(ctx).Create(config).Error
+	err = d.db.WithContext(ctx).Create(&config).Error
 	if err != nil {
 		return &connector.ActionResponse{
 			Status: restapi.ActionRequestStatusFailed,
@@ -303,7 +303,7 @@ func (d *DB) GetInstance(instanceId string) (connector.InstantiationRequest, err
 }
 
 func (d *DB) StoreDEVUIToThingID(instanceID string, devEUI []byte, thingID string) error {
-	mapping := IDMapping{
+	mapping := &IDMapping{
 		DevEUI:     devEUI,
 		ThingID:    thingID,
 		InstanceID: instanceID,
