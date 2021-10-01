@@ -60,10 +60,10 @@ spec:
           - name: LORACONN_HTTP_HOST
             value: {{ (index .Values.ingress.hosts 0).host }}
           - name: LORACONN_PUBKEYPATH
-            value: /etc/lora-pub.key
+            value: /var/secret/lora-pub.key
           volumeMounts:
           - name: public-key
-            mountPath: /etc
+            mountPath: /var/secret
             readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
