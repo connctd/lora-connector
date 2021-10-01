@@ -16,24 +16,24 @@ import (
 
 type Installation struct {
 	gorm.Model
-	ID    string `gorm:"primaryKey"`
+	ID    string `gorm:"primaryKey;size:36"`
 	Token string
 }
 
 type Instance struct {
 	gorm.Model
-	ID             string `gorm:"primaryKey"`
+	ID             string `gorm:"primaryKey;size:36"`
 	Token          string
-	InstallationID string        `gorm:"REFERENCES installations(id)"`
+	InstallationID string        `gorm:"REFERENCES installations(id);size:36"`
 	Installation   *Installation `gorm:"foreignKey:InstallationID;AssociationForeignKey:ID"`
-	ConfigThingID  string        `gorm:"uniqueIndex"`
+	ConfigThingID  string        `gorm:"uniqueIndex;size:36"`
 }
 
 type IDMapping struct {
 	gorm.Model
-	DevEUI     []byte    `gorm:"primaryKey"`
-	ThingID    string    `gorm:"uniqueIndex"`
-	InstanceID string    `gorm:"REFERENCES instances(id)"`
+	DevEUI     []byte    `gorm:"primaryKey;size:8"`
+	ThingID    string    `gorm:"uniqueIndex;size:36"`
+	InstanceID string    `gorm:"REFERENCES instances(id);size:36"`
 	Instance   *Instance `gorm:"foreignKey:InstanceID;AssociationForeignKey:ID"`
 }
 
@@ -41,7 +41,7 @@ type DecoderConfig struct {
 	gorm.Model
 	ApplicationID uint64 `grom:"primaryKey"`
 	DecoderName   string
-	InstanceID    string    `gorm:"REFERENCES instances(id)"`
+	InstanceID    string    `gorm:"REFERENCES instances(id);size:36"`
 	Instance      *Instance `gorm:"foreignKey:InstanceID;AssociationForeignKey:ID"`
 }
 

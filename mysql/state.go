@@ -1,8 +1,8 @@
 package mysql
 
 type DecoderState struct {
-	ThingID string `gorm:"primaryKey"`
-	Key     string `gorm:"primaryKey"`
+	ThingID string `gorm:"primaryKey;size:36"`
+	Key     string `gorm:"primaryKey;size:36"`
 	Value   []byte
 }
 
