@@ -46,7 +46,7 @@ type DecoderConfig struct {
 }
 
 var configThing = restapi.Thing{
-	Name:            "configuration Thin",
+	Name:            "configuration Thing",
 	Manufacturer:    "IoT connctd GmbH",
 	DisplayType:     "loranetwork",
 	Status:          restapi.StatusTypeAvailable,
