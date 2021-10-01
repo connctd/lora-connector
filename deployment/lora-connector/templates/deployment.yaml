@@ -62,7 +62,7 @@ spec:
           - name: LORACONN_PUBKEYPATH
             value: /etc/lora-pub.key
           volumeMounts:
-          - name: public_key
+          - name: public-key
             mountPath: /etc
             readOnly: true
       {{- with .Values.nodeSelector }}
@@ -78,7 +78,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-      - name: public_key
+      - name: public-key
         secret:
           secretName: {{ include "lora-connector.fullname" . }}
           items:
