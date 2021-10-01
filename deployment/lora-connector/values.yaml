@@ -46,9 +46,9 @@ ingress:
   - host: chirpstack.lora.connctd.io
     paths:
       - path: /lorawan
-        pathType: PathPrefix
+        pathType: ImplementationSpecific
       - path: /connector
-        pathType: PathPrefix
+        pathType: ImplementationSpecific
   tls:
   - secretName: chirpstack.lora.connctd.io
     hosts:
