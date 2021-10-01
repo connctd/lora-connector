@@ -12,10 +12,15 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-podAnnotations: {}
+podAnnotations:
+  sqlbee.connctd.io.inject: "true"
 
 podSecurityContext: {}
-  # fsGroup: 2000
+  # fsGroup: 
+  
+mysql:
+  db: chirpstack_connector
+  username: chirpstack_connector
 
 securityContext:
   capabilities:

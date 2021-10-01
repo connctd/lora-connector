@@ -44,6 +44,19 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          env:
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "lora-connector.fullname" . }}-mysql
+                key: username
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "lora-connector.fullname" . }}-mysql
+                key: password
+          - name: LORACONN_DB_DSN
+            value: $(MYSQL_USER):$(MYSQL_PASSWORD)@tcp(127.0.0.1)/{{ .Values.mysql.db }}?parseTime=true
           volumeMounts:
           - name: public_key
             mountPath: /etc/lora-pub.key
