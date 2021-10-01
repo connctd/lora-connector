@@ -57,6 +57,10 @@ spec:
                 key: password
           - name: LORACONN_DB_DSN
             value: $(MYSQL_USER):$(MYSQL_PASSWORD)@tcp(127.0.0.1)/{{ .Values.mysql.db }}?parseTime=true
+          - name: LORACONN_HTTP_HOST
+            value: {{ (index .Values.ingress.hosts 0).host }}
+          - name: LORACONN_PUBKEYPATH
+            value: /etc/lora-pub.key
           volumeMounts:
           - name: public_key
             mountPath: /etc/lora-pub.key
