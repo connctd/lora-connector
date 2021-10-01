@@ -10,6 +10,7 @@ import (
 
 	"github.com/connctd/connector-go"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 )
 
 type ConnectorService interface {
@@ -21,12 +22,14 @@ type ConnectorService interface {
 type ConnectorHandler struct {
 	r       *mux.Router
 	service ConnectorService
+	logger  logrus.FieldLogger
 }
 
 func NewConnectorHandler(subrouter *mux.Router, service ConnectorService, host string, publicKey ed25519.PublicKey) *ConnectorHandler {
 	c := &ConnectorHandler{
 		r:       subrouter,
 		service: service,
+		logger:  logrus.WithField("component", "connectorhandler"),
 	}
 	if c.r == nil {
 		c.r = mux.NewRouter()
@@ -41,13 +44,20 @@ func NewConnectorHandler(subrouter *mux.Router, service ConnectorService, host s
 }
 
 func (c *ConnectorHandler) addInstallation(w http.ResponseWriter, r *http.Request) {
+	logger := c.logger.WithFields(logrus.Fields{
+		"client": r.RemoteAddr,
+		"url":    r.URL.String(),
+		"method": "addInstallation",
+	})
 	var req connector.InstallationRequest
 	if err := decodeJSONBody(w, r, &req); err != nil {
+		logger.WithError(err).Error("Failed to decode client request")
 		writeError(w, err)
 		return
 	}
 
 	if err := c.service.AddInstallation(r.Context(), req); err != nil {
+		logger.WithError(err).Error("Failed to add installation")
 		writeError(w, err)
 		return
 	}
@@ -55,13 +65,20 @@ func (c *ConnectorHandler) addInstallation(w http.ResponseWriter, r *http.Reques
 }
 
 func (c *ConnectorHandler) addInstance(w http.ResponseWriter, r *http.Request) {
+	logger := c.logger.WithFields(logrus.Fields{
+		"client": r.RemoteAddr,
+		"url":    r.URL.String(),
+		"method": "addInstance",
+	})
 	var req connector.InstantiationRequest
 	if err := decodeJSONBody(w, r, &req); err != nil {
+		logger.WithError(err).Error("Failed to decode client request")
 		writeError(w, err)
 		return
 	}
 
 	if err := c.service.AddInstance(r.Context(), req); err != nil {
+		logger.WithError(err).Error("Failed to add instance")
 		writeError(w, err)
 		return
 	}
@@ -69,20 +86,28 @@ func (c *ConnectorHandler) addInstance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *ConnectorHandler) performAction(w http.ResponseWriter, r *http.Request) {
+	logger := c.logger.WithFields(logrus.Fields{
+		"client": r.RemoteAddr,
+		"url":    r.URL.String(),
+		"method": "performAction",
+	})
 	var req connector.ActionRequest
 	if err := decodeJSONBody(w, r, &req); err != nil {
+		logger.WithError(err).Error("Failed to decode client request")
 		writeError(w, err)
 		return
 	}
 
 	resp, err := c.service.PerformAction(r.Context(), req)
 	if err != nil {
+		logger.WithError(err).Error("Failed to perform action")
 		writeError(w, err)
 		return
 	}
 
 	b, err := json.Marshal(resp)
 	if err != nil {
+		logger.WithError(err).Error("failed to marshal action error")
 		writeError(w, err)
 		return
 	}
