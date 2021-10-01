@@ -35,11 +35,11 @@ func NewConnectorHandler(subrouter *mux.Router, service ConnectorService, host s
 		c.r = mux.NewRouter()
 	}
 	c.r.Path("/installations").Methods(http.MethodPost).Handler(connector.NewSignatureValidationHandler(
-		connector.ProxiedRequestValidationPreProcessor("https", host, "/api/v1/installations"), publicKey, c.addInstallation))
+		connector.ProxiedRequestValidationPreProcessor("https", host, "/connector/installations"), publicKey, c.addInstallation))
 	c.r.Path("/instances").Methods(http.MethodPost).Handler(connector.NewSignatureValidationHandler(
-		connector.ProxiedRequestValidationPreProcessor("https", host, "/api/v1/instances"), publicKey, c.addInstance))
+		connector.ProxiedRequestValidationPreProcessor("https", host, "/connector/instances"), publicKey, c.addInstance))
 	c.r.Path("/actions").Methods(http.MethodPost).Handler(connector.NewSignatureValidationHandler(
-		connector.ProxiedRequestValidationPreProcessor("https", host, "/api/v1/actions"), publicKey, c.performAction))
+		connector.ProxiedRequestValidationPreProcessor("https", host, "/connector/actions"), publicKey, c.performAction))
 	return c
 }
 

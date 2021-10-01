@@ -110,7 +110,7 @@ func main() {
 	r.Path("/lorawan/{installationId}/{instanceId}").Methods(http.MethodPost, http.MethodPut).Handler(loraWANHandler)
 	cr := r.PathPrefix("/connector").Subrouter()
 
-	connhttp.NewConnectorHandler(cr, db, "", pubKey)
+	connhttp.NewConnectorHandler(cr, db, host, pubKey)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
