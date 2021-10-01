@@ -88,7 +88,7 @@ func main() {
 	var pubKey ed25519.PublicKey
 	base64PubKey := viper.GetString("pubkey")
 	if base64PubKey != "" {
-		pubKeyBytes, err := base64.RawStdEncoding.DecodeString(base64PubKey)
+		pubKeyBytes, err := base64.StdEncoding.DecodeString(base64PubKey)
 		if err != nil {
 			logger.WithError(err).Fatal("Failed to decode base64 encoded public key")
 		}
