@@ -13,6 +13,8 @@ import (
 
 const metersPerBar = 10.1972
 
+const mmH2OPerBar = 0.0000980638
+
 func init() {
 	decoder.RegisterDecoder("dcl571", dcl571decoder{})
 }
@@ -126,7 +128,7 @@ func (d dcl571decoder) DecodeMessage(store decoder.DecoderStateStore, fport uint
 			ThingID:     thingID,
 			ComponentID: "pressure",
 			PropertyID:  "pressureUpperLimit",
-			Value:       fmt.Sprintf("%f", upperPressureLimit),
+			Value:       fmt.Sprintf("%f", upperPressureLimit*mmH2OPerBar),
 			UpdateTime:  time.Now(),
 		})
 	}
@@ -137,7 +139,7 @@ func (d dcl571decoder) DecodeMessage(store decoder.DecoderStateStore, fport uint
 			ThingID:     thingID,
 			ComponentID: "pressure",
 			PropertyID:  "pressureLowerLimit",
-			Value:       fmt.Sprintf("%f", lowerPressureLimit),
+			Value:       fmt.Sprintf("%f", lowerPressureLimit*mmH2OPerBar),
 			UpdateTime:  time.Now(),
 		})
 	}
@@ -148,7 +150,7 @@ func (d dcl571decoder) DecodeMessage(store decoder.DecoderStateStore, fport uint
 			ThingID:     thingID,
 			ComponentID: "pressure",
 			PropertyID:  "pressure",
-			Value:       fmt.Sprintf("%f", pressure),
+			Value:       fmt.Sprintf("%f", pressure*mmH2OPerBar),
 			UpdateTime:  time.Now(),
 		})
 
@@ -167,14 +169,13 @@ func (d dcl571decoder) DecodeMessage(store decoder.DecoderStateStore, fport uint
 			}
 		}
 		waterLevelOffsetMM, _ := binary.Varint(val)
-		waterLevelOffset := float64(waterLevelOffsetMM) / 10.0
-		waterLevel := waterLevelOffset/100.0 + (float64(pressure) * metersPerBar)
+		waterLevel := (float32(waterLevelOffsetMM) + pressure) / 10.0
 
 		updates = append(updates, decoder.PropertyUpdate{
 			ThingID:     thingID,
 			ComponentID: "waterlevel",
 			PropertyID:  "waterlevel",
-			Value:       fmt.Sprintf("%f", waterLevel*100.0),
+			Value:       fmt.Sprintf("%f", waterLevel),
 			UpdateTime:  time.Now(),
 		})
 	}

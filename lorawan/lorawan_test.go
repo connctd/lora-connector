@@ -88,7 +88,7 @@ func TestDCL571Handling(t *testing.T) {
 		"foothing",
 		"waterlevel",
 		"waterlevel",
-		"4107.497678",
+		"0.402806",
 		mock.AnythingOfType("time.Time")).Return(nil)
 	connectorClient.On("UpdateThingPropertyValue",
 		mock.MatchedBy(func(in interface{}) bool { return true }),
@@ -96,7 +96,7 @@ func TestDCL571Handling(t *testing.T) {
 		"foothing",
 		"pressure",
 		"pressure",
-		"4.028064",
+		"0.000395",
 		mock.AnythingOfType("time.Time")).Return(nil)
 	connectorClient.On("UpdateThingPropertyValue",
 		mock.MatchedBy(func(in interface{}) bool { return true }),
@@ -120,7 +120,7 @@ func TestDCL571Handling(t *testing.T) {
 		"foothing",
 		"pressure",
 		"pressureUpperLimit",
-		"4007.555420",
+		"0.392996",
 		mock.AnythingOfType("time.Time")).Return(nil)
 	connectorClient.On("UpdateThingPropertyValue",
 		mock.MatchedBy(func(in interface{}) bool { return true }),
