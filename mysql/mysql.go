@@ -10,6 +10,7 @@ import (
 	"github.com/connctd/connector-go"
 	"github.com/connctd/lora-connector/lorawan/decoder"
 	"github.com/connctd/restapi-go"
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -98,6 +99,7 @@ type DB struct {
 	db              *gorm.DB
 	connectorClient connector.Client
 	host            string
+	logger          logrus.FieldLogger
 }
 
 func NewDB(dsn string, connectorClient connector.Client, host string) (*DB, error) {
@@ -111,6 +113,7 @@ func NewDB(dsn string, connectorClient connector.Client, host string) (*DB, erro
 		db:              gdb,
 		connectorClient: connectorClient,
 		host:            host,
+		logger:          logrus.WithField("component", "mysql"),
 	}
 	return d, nil
 }
@@ -168,20 +171,28 @@ func (d *DB) AddInstance(ctx context.Context, req connector.InstantiationRequest
 }
 
 func (d *DB) PerformAction(ctx context.Context, req connector.ActionRequest) (*connector.ActionResponse, error) {
+	logger := d.logger.WithFields(logrus.Fields{
+		"actionRequestId": req.ID,
+		"thingId":         req.ThingID,
+	})
 	var instance Instance
 	err := d.db.WithContext(ctx).Model(&Instance{}).Where("config_thing_id = ?", req.ThingID).Take(&instance).Error
 	if err == nil {
+		logger.Info("Thing is a config thing, performing config action")
 		return d.performConfigThingAction(ctx, instance, req)
 	}
 	if err == gorm.ErrRecordNotFound {
+		logger.Info("Thing is not a config thing, trying to figure out to which instance this thing belongs")
 		var mapping IDMapping
 		err = d.db.Model(&IDMapping{}).Where("thing_id = ?", req.ThingID).Take(&mapping).Error
 		if err != nil && err == gorm.ErrRecordNotFound {
+			logger.Error("Thing does not exist, replying with failed action request status")
 			return &connector.ActionResponse{
 				Status: restapi.ActionRequestStatusFailed,
 				Error:  "thing does not exist",
 			}, nil
 		} else if err != nil {
+			logger.WithError(err).Error("Unknown error, failing action request")
 			return &connector.ActionResponse{
 				Status: restapi.ActionRequestStatusFailed,
 				Error:  "Internal Error",
@@ -189,6 +200,7 @@ func (d *DB) PerformAction(ctx context.Context, req connector.ActionRequest) (*c
 		}
 		return d.performLoraThingAction(ctx, req)
 	} else {
+		logger.WithError(err).Error("Querying database for action thing failed")
 		return &connector.ActionResponse{
 			Status: restapi.ActionRequestStatusFailed,
 			Error:  err.Error(),
@@ -197,6 +209,11 @@ func (d *DB) PerformAction(ctx context.Context, req connector.ActionRequest) (*c
 }
 
 func (d *DB) performLoraThingAction(ctx context.Context, req connector.ActionRequest) (*connector.ActionResponse, error) {
+	logger := d.logger.WithFields(logrus.Fields{
+		"actionRequestId": req.ID,
+		"thingId":         req.ThingID,
+	})
+	logger.Info("Performing action on actial lora thing")
 	if req.ActionID == "setMountingHeight" {
 		mountingHeight, err := strconv.ParseFloat(req.Parameters["mountingHeight"], 64)
 		if err != nil {
@@ -242,7 +259,14 @@ func (d *DB) performLoraThingAction(ctx context.Context, req connector.ActionReq
 }
 
 func (d *DB) performConfigThingAction(ctx context.Context, instance Instance, req connector.ActionRequest) (*connector.ActionResponse, error) {
+	logger := d.logger.WithFields(logrus.Fields{
+		"actionRequestId": req.ID,
+		"thingId":         req.ThingID,
+		"actionId":        req.ActionID,
+		"componentId":     req.ComponentID,
+	})
 	if req.ActionID != "addmapping" || req.ComponentID != "lora" {
+		logger.Error("Invalid action id or component id. Expected action 'addmapping' and component 'lora'")
 		return &connector.ActionResponse{
 			Status: restapi.ActionRequestStatusFailed,
 			Error:  "Invalid action or component ID",
@@ -251,6 +275,7 @@ func (d *DB) performConfigThingAction(ctx context.Context, instance Instance, re
 	appIdString := req.Parameters["ApplicationId"]
 	appId, err := strconv.ParseUint(appIdString, 10, 64)
 	if err != nil {
+		logger.WithError(err).WithField("applicationIdParam", appIdString).Error("Failed to parse application ID")
 		return &connector.ActionResponse{
 			Status: restapi.ActionRequestStatusFailed,
 			Error:  "Invalid LoRaWAN application id",
@@ -259,6 +284,7 @@ func (d *DB) performConfigThingAction(ctx context.Context, instance Instance, re
 	decoderName := req.Parameters["PayloadDecoder"]
 	dec := decoder.GetDecoder(decoderName)
 	if dec == nil {
+		logger.WithError(err).WithField("payloadDecoderParam", decoderName).Error("Decoder with that name not found")
 		return &connector.ActionResponse{
 			Status: restapi.ActionRequestStatusFailed,
 			Error:  "Invalid decoder name",
@@ -271,11 +297,13 @@ func (d *DB) performConfigThingAction(ctx context.Context, instance Instance, re
 	}
 	err = d.db.WithContext(ctx).Create(&config).Error
 	if err != nil {
+		logger.WithError(err).Error("Failed to create decoder config")
 		return &connector.ActionResponse{
 			Status: restapi.ActionRequestStatusFailed,
 			Error:  "Internal Error",
 		}, err
 	}
+	logger.Info("Config thing action completed successfully")
 	return &connector.ActionResponse{
 		Status: restapi.ActionRequestStatusCompleted,
 	}, nil
