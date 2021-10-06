@@ -104,7 +104,7 @@ func (c *ConnectorHandler) performAction(w http.ResponseWriter, r *http.Request)
 		writeError(w, err)
 		return
 	}
-
+	resp.ID = req.ID
 	b, err := json.Marshal(resp)
 	if err != nil {
 		logger.WithError(err).Error("failed to marshal action error")
