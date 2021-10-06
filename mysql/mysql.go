@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Installation struct {
@@ -295,7 +296,9 @@ func (d *DB) performConfigThingAction(ctx context.Context, instance Instance, re
 		DecoderName:   decoderName,
 		InstanceID:    instance.ID,
 	}
-	err = d.db.WithContext(ctx).Create(&config).Error
+	err = d.db.WithContext(ctx).Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&config).Error
 	if err != nil {
 		logger.WithError(err).Error("Failed to create decoder config")
 		return &connector.ActionResponse{
