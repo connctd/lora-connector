@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/ed25519"
 	"encoding/base64"
+	"encoding/json"
 	"flag"
 	"io/ioutil"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	_ "github.com/connctd/lora-connector/lorawan/decoder/dcl571"
 	_ "github.com/connctd/lora-connector/lorawan/decoder/ldds75"
 	"github.com/connctd/lora-connector/mysql"
+	"github.com/connctd/restapi-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -104,6 +106,18 @@ func main() {
 	}
 
 	r := mux.NewRouter()
+	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger.WithFields(logrus.Fields{
+			"remote":     r.RemoteAddr,
+			"requestUri": r.RequestURI,
+		}).Error("404 - URL not found")
+		resp := connector.ActionResponse{
+			Status: restapi.ActionRequestStatusFailed,
+			Error:  "404 - URL not found",
+		}
+		json.NewEncoder(w).Encode(resp)
+		w.WriteHeader(http.StatusNotFound)
+	})
 	r.Path("/health").Methods(http.MethodGet).HandlerFunc(simpleHealthHandler)
 
 	loraWANHandler := lorawan.NewLoRaWANHandler(apiClient, true, db)
