@@ -115,8 +115,8 @@ func main() {
 			Status: restapi.ActionRequestStatusFailed,
 			Error:  "404 - URL not found",
 		}
-		json.NewEncoder(w).Encode(resp)
 		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(resp)
 	})
 	r.Path("/health").Methods(http.MethodGet).HandlerFunc(simpleHealthHandler)
 
