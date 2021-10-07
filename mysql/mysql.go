@@ -40,11 +40,14 @@ type IDMapping struct {
 }
 
 type DecoderConfig struct {
-	gorm.Model
-	ApplicationID uint64 `grom:"primaryKey"`
+	ApplicationID uint64 `gorm:"primaryKey"`
 	DecoderName   string
 	InstanceID    string    `gorm:"REFERENCES instances(id);size:36"`
 	Instance      *Instance `gorm:"foreignKey:InstanceID;AssociationForeignKey:ID"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 var configThing = restapi.Thing{
