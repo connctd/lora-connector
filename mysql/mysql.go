@@ -349,6 +349,9 @@ func (d *DB) StoreDEVUIToThingID(instanceID string, devEUI []byte, thingID strin
 func (d *DB) MapDevEUIToThingID(instanceId string, devEUI []byte) (string, error) {
 	var mapping IDMapping
 	err := d.db.Model(&IDMapping{}).Where("dev_e_ui = ? AND instance_id = ?", devEUI, instanceId).Take(&mapping).Error
+	if err == gorm.ErrRecordNotFound {
+		return "", nil
+	}
 	return mapping.ThingID, err
 }
 
