@@ -57,8 +57,12 @@ github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354/go.mod h1:WmhPx2Nbnht
 github.com/cncf/udpa/go v0.0.0-20201120205902-5459f2c99403/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
 github.com/connctd/api-go v0.0.1 h1:uPaViJQnWzQEo0xYGJOnhAAyviR8eJZZIkWrJ48irDU=
 github.com/connctd/api-go v0.0.1/go.mod h1:B1YXvl8/5TvUB1TNoUbpVq+KEqNUZQUjF6nmdKtTG+s=
+github.com/connctd/connector-go v0.0.0-20200709144631-d2480d158f78 h1:3ggiL0sKJTqQzSFfG517TAixRoCF0aRN4QP+BLeoNh8=
+github.com/connctd/connector-go v0.0.0-20200709144631-d2480d158f78/go.mod h1:jxwnV8zpMoKBUVE9S0zjouUsKCZlrHIsRHR92DWPesw=
 github.com/connctd/connector-go v0.0.0-20210715065743-23885d997d69 h1:V0QmqiiEoP9XgMUjsRF+j8vioYh2w+5L1x/NHYMV+jI=
 github.com/connctd/connector-go v0.0.0-20210715065743-23885d997d69/go.mod h1:5lbw+M2gBi1u0HbkEtJ6+bPK5Qn57bYcciurUt4lS9c=
+github.com/connctd/connector-go v0.0.0-20210826081925-40807b693708 h1:0IHbneCh/PJn8LTPoUJRuk16WhFMDi3Bhj2Spb7bapc=
+github.com/connctd/connector-go v0.0.0-20210826081925-40807b693708/go.mod h1:6TOACWRYxlJLAdhhkUo478uZhuwztc3wZ5tcu0krvq0=
 github.com/connctd/restapi-go v0.0.3-0.20210621141557-c927ea01e1f2/go.mod h1:LcHfnyb/K2HNcnYBj5UlWgIcm32hduyIbGSHS9r8hK4=
 github.com/connctd/restapi-go v0.0.3 h1:8sltgsyMrtnM1SrI//lu8lNwmjHDrjy2xJLMWYRVW1c=
 github.com/connctd/restapi-go v0.0.3/go.mod h1:LcHfnyb/K2HNcnYBj5UlWgIcm32hduyIbGSHS9r8hK4=

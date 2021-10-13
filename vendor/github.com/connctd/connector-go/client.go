@@ -141,7 +141,7 @@ func (a *APIClient) CreateThing(ctx context.Context, token InstantiationToken, t
 
 	var res AddThingResponse
 	if err := json.Unmarshal(body, &res); err != nil {
-		return restapi.Thing{}, fmt.Errorf("unable to unmarshal AddThingResponse: %w", err)
+		return restapi.Thing{}, ErrorUnexpectedResponse
 	}
 
 	thing.ID = res.ID
@@ -167,6 +167,7 @@ func (a *APIClient) UpdateThingStatus(ctx context.Context, token InstantiationTo
 	return a.doRequest(ctx, http.MethodPut, path.Join(connectorThingsEndpoint, thingID, "status"), string(token), message, http.StatusNoContent)
 }
 
+// UpdateActionStatus implements interface definition
 func (a *APIClient) UpdateActionStatus(ctx context.Context, token InstantiationToken, actionRequestID string, status restapi.ActionRequestStatus, e string) error {
 	message := ActionRequestStatusUpdate{
 		Status: status,
@@ -260,4 +261,5 @@ var (
 	ErrorInvalidBaseURL       = errors.New("the base url needs to end with a slash")
 	ErrorMissingLogger        = errors.New("a logger needs to be passed")
 	ErrorUnexpectedStatusCode = errors.New("the resulting status code does not match with expectation")
+	ErrorUnexpectedResponse   = errors.New("remote site replied with unexpected contents")
 )

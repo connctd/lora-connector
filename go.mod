@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/brocaar/chirpstack-api/go/v3 v3.11.1
-	github.com/connctd/connector-go v0.0.0-20210715065743-23885d997d69
+	github.com/connctd/connector-go v0.0.0-20210826081925-40807b693708
 	github.com/connctd/restapi-go v0.0.3
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/protobuf v1.5.2

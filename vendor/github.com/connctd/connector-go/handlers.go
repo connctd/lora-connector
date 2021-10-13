@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/base64"
+	"errors"
 	"io/ioutil"
 	"net/http"
 
@@ -50,6 +51,15 @@ func (h *signatureValidationHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 	// apply preprocess and pass values to signing function
 	extractedValues := h.preProcessor(r)
 	expectedSignature, err := crypto.SignablePayload(r.Method, extractedValues.Scheme, extractedValues.Host, extractedValues.RequestURI, r.Header, body)
+	if err != nil {
+		if errors.Is(err, crypto.ErrorMissingHeader) {
+			crypto.ErrorMissingHeader.Write(w)
+			return
+		}
+
+		ErrorSigningFailed.Write(w)
+		return
+	}
 
 	// lets check the signature manually
 	if ed25519.Verify(h.publicKey, expectedSignature, decodedSignature) {
@@ -103,6 +113,7 @@ type ValidationParameters struct {
 
 // some error definitions
 var (
-	ErrorBadSignature = api.NewError("BAD_SIGNATURE", "Signature seems to be invalid", http.StatusBadRequest)
-	ErrorInvalidBody  = api.NewError("INVALID_BODY", "Unable to read message body", http.StatusBadRequest)
+	ErrorBadSignature  = api.NewError("BAD_SIGNATURE", "Signature seems to be invalid", http.StatusBadRequest)
+	ErrorSigningFailed = api.NewError("SIGNING_FAILED", "Failed to sign the request", http.StatusBadRequest)
+	ErrorInvalidBody   = api.NewError("INVALID_BODY", "Unable to read message body", http.StatusBadRequest)
 )

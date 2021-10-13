@@ -7,7 +7,7 @@ github.com/brocaar/chirpstack-api/go/v3/gw
 ## explicit; go 1.14
 github.com/connctd/api-go
 github.com/connctd/api-go/crypto
-# github.com/connctd/connector-go v0.0.0-20210715065743-23885d997d69
+# github.com/connctd/connector-go v0.0.0-20210826081925-40807b693708
 ## explicit; go 1.14
 github.com/connctd/connector-go
 # github.com/connctd/restapi-go v0.0.3
