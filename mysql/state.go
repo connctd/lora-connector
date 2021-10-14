@@ -1,6 +1,9 @@
 package mysql
 
+import "gorm.io/gorm"
+
 type DecoderState struct {
+	gorm.Model
 	ThingID string `gorm:"primaryKey;size:36"`
 	Key     string `gorm:"primaryKey;size:36"`
 	Value   []byte

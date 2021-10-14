@@ -128,6 +128,7 @@ func (d *DB) CreateOrMigrate() error {
 		&Instance{},
 		&IDMapping{},
 		&DecoderConfig{},
+		&DecoderState{},
 	} {
 		if err := d.db.AutoMigrate(model); err != nil {
 			return fmt.Errorf("failed to automigrate %T table: %w", model, err)
