@@ -1,6 +1,9 @@
 package mysql
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+)
 
 type DecoderState struct {
 	gorm.Model
@@ -21,5 +24,7 @@ func (d *DB) SetState(thingId, key string, value []byte) error {
 		Key:     key,
 		Value:   value,
 	}
-	return d.db.Create(state).Error
+	return d.db.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&state).Error
 }
