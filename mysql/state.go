@@ -11,7 +11,7 @@ type DecoderState struct {
 
 func (d *DB) GetState(thingID, key string) ([]byte, error) {
 	var state DecoderState
-	err := d.db.Where("thing_id = ? AND key = ?", thingID, key).First(&state).Error
+	err := d.db.Where("thing_id = ? AND `key` = ?", thingID, key).First(&state).Error
 	return state.Value, err
 }
 
