@@ -14,15 +14,15 @@ func TestDecodePressureValue(t *testing.T) {
 	payload, err := base64.RawStdEncoding.DecodeString(base64Payload)
 	require.NoError(t, err)
 
-	pressure := decodePressureValue(payload[52:])
+	pressure, _ := decodePressureValue(payload[52:])
 	assert.EqualValues(t, float32(4.0280643), pressure)
 
-	pressureLimit := decodePressureValue(payload[28:])
+	pressureLimit, _ := decodePressureValue(payload[28:])
 	assert.EqualValues(t, float32(4007.555420), pressureLimit)
 
-	maxPressure := decodePressureValue(payload[64:])
+	maxPressure, _ := decodePressureValue(payload[64:])
 	assert.EqualValues(t, float32(4.806449), maxPressure)
 
-	minPressure := decodePressureValue(payload[76:])
+	minPressure, _ := decodePressureValue(payload[76:])
 	assert.EqualValues(t, float32(1.1091806), minPressure)
 }
