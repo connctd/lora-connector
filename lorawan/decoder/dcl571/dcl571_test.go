@@ -8,21 +8,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var base64Payload = `AQwAAKkAgwQBAExhgwQCAOUHgwQDAB0HgwQEAHpFgwQFAON4gwQGAAAAgwQHAAAAgwQIAIBAgwQJAOflgwQKAJlAgwQLAG7OgwQMAI0/gwQNAKH5gwQOAKBCgwQPAAAA`
+var base64Payloads = []string{
+	`gc1PAAcHAgAAAAAAAAcnAgAAAAAANAofIACAAAAVgNx/NAo/IACAAAAGgPl/EAIBAIMEAACpAIMEAQBMYYMEAgADQ4MEAwDpGGAHFgJigKV2YTU`,
+	`gd1PAAcHAgAAAAAAAAcnAgAAAAAANAofIACAAAAVgNx/NAo/IP9/AAAGgPl/EAIBAIMEAACpAIMEAQBMYYMEAgADQ4MEAwCLfGAHFgJhq8t2YaQ`,
+}
 
 func TestDecodePressureValue(t *testing.T) {
-	payload, err := base64.RawStdEncoding.DecodeString(base64Payload)
+	payload, err := base64.RawStdEncoding.DecodeString(base64Payloads[0])
 	require.NoError(t, err)
 
-	pressure, _ := decodePressureValue(payload[52:])
-	assert.EqualValues(t, float32(4.0280643), pressure)
+	pressure, _ := decodePressureValue(payload[65:])
+	assert.EqualValues(t, float32(131.0973), pressure)
 
-	pressureLimit, _ := decodePressureValue(payload[28:])
-	assert.EqualValues(t, float32(4007.555420), pressureLimit)
+	payload, err = base64.RawStdEncoding.DecodeString(base64Payloads[1])
+	require.NoError(t, err)
 
-	maxPressure, _ := decodePressureValue(payload[64:])
-	assert.EqualValues(t, float32(4.806449), maxPressure)
-
-	minPressure, _ := decodePressureValue(payload[76:])
-	assert.EqualValues(t, float32(1.1091806), minPressure)
+	pressure, _ = decodePressureValue(payload[65:])
+	assert.EqualValues(t, float32(131.486496), pressure)
 }

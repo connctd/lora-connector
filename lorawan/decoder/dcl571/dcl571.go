@@ -138,40 +138,8 @@ func (d dcl571decoder) DecodeMessage(store decoder.DecoderStateStore, fport uint
 		"msgLen":  len(msg),
 	})
 
-	if len(msg) > 28+7 {
-		upperPressureLimit, err := decodePressureValue(msg[28:])
-		if err != nil {
-			logger.WithError(err).WithField("msg", hex.EncodeToString(msg)).Warn("Failed to decode upper pressure limit")
-		} else {
-			updates = append(updates, decoder.PropertyUpdate{
-				ThingID:     thingID,
-				ComponentID: "pressure",
-				PropertyID:  "pressureUpperLimit",
-				Value:       fmt.Sprintf("%f", upperPressureLimit*mmH2OPerBar),
-				UpdateTime:  time.Now(),
-			})
-		}
-
-	}
-
-	if len(msg) > 40+7 {
-		lowerPressureLimit, err := decodePressureValue(msg[40:])
-		if err != nil {
-			logger.WithError(err).WithField("msg", hex.EncodeToString(msg)).Warn("Failed to decode lower pressure limit")
-		} else {
-			updates = append(updates, decoder.PropertyUpdate{
-				ThingID:     thingID,
-				ComponentID: "pressure",
-				PropertyID:  "pressureLowerLimit",
-				Value:       fmt.Sprintf("%f", lowerPressureLimit*mmH2OPerBar),
-				UpdateTime:  time.Now(),
-			})
-		}
-
-	}
-
-	if len(msg) > 52+7 {
-		pressure, err := decodePressureValue(msg[52:])
+	if len(msg) >= 65+7 {
+		pressure, err := decodePressureValue(msg[65:])
 		if err != nil {
 			logger.WithError(err).WithField("msg", hex.EncodeToString(msg)).Warn("Failed to decode pressure")
 		} else {
@@ -211,42 +179,12 @@ func (d dcl571decoder) DecodeMessage(store decoder.DecoderStateStore, fport uint
 
 	}
 
-	if len(msg) > 64+1 {
-		maxPressure, err := decodePressureValue(msg[64:])
-		if err != nil {
-			logger.WithError(err).WithField("msg", hex.EncodeToString(msg)).Warn("Failed to decode max pressure")
-		} else {
-			updates = append(updates, decoder.PropertyUpdate{
-				ThingID:     thingID,
-				ComponentID: "pressure",
-				PropertyID:  "maxPressure",
-				Value:       fmt.Sprintf("%f", maxPressure),
-				UpdateTime:  time.Now(),
-			})
-		}
-	}
-
-	if len(msg) > 76+1 {
-		minPressure, err := decodePressureValue(msg[76:])
-		if err != nil {
-			logger.WithError(err).WithField("msg", hex.EncodeToString(msg)).Warn("Failed to decode min pressure")
-		} else {
-			updates = append(updates, decoder.PropertyUpdate{
-				ThingID:     thingID,
-				ComponentID: "pressure",
-				PropertyID:  "minPressure",
-				Value:       fmt.Sprintf("%f", minPressure),
-				UpdateTime:  time.Now(),
-			})
-		}
-	}
-
 	return updates, nil
 }
 
 func decodePressureValue(msg []byte) (float32, error) {
 	if len(msg) < 8 {
-		return 0.0, errors.New("Message to small to contain valid pressure value")
+		return 0.0, errors.New("message to small to contain valid pressure value")
 	}
 	b := []byte{msg[6], msg[7], msg[0], msg[1]}
 	buf := bytes.NewReader(b)
