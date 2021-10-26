@@ -1,0 +1,87 @@
+MEMO
+
+
+echo -n 'bXktc3RyaW5n' | base64 -d  | xxd -l 120 -ps -c0
+6d792d737472696e67
+
+echo -n 'bXktc3RyaW5n' | base64 -d  | xxd -l 120 -ps -c2
+6d79
+2d73
+7472
+696e
+67
+
+ echo -n 'bXktc3RyaW5n' | base64 -d  | xxd 
+00000000: 6d79 2d73 7472 696e 67                   my-string
+
+
+zum testen
+
+echo -n 'bXktc3RyaW5n' | base64 -d  | hexdump -C -e '/1 "%02X"'
+
+
+echo -ne "\x00\xb7\x4e\x47" | hexdump -e '1/4 "%f" "\n"'
+
+hexdump test zum wandeln von IEEE754
+
+You entered 		112.2
+Value actually stored in float: 	112.1999969482421875
+Error due to conversion: 	-0.0000030517578125
+Binary Representation 	01000010111000000110011001100110
+Hexadecimal Representation 	0x42e06666
+
+Modbus-Telegramm
+AQwAAKkAgwQBAExhgwQCAOUHgwQDAB0HgwQEAHpFgwQFAON4gwQGAAAAgwQHAAAAgwQI
+    > echo -n 'AQwAAKkAgwQBAExhgwQCAOUHgwQDAB0HgwQEAHpFgwQFAON4gwQGAAAAgwQHAAAAgwQI' | base64 -d  | xxd -l 120 -ps -c2
+Die Ausgabe ist
+010c ---
+0000
+a900
+8304
+0100
+4c61
+8304
+0200
+e507
+8304
+0300
+1d07
+8304
+0400
+7a45 --
+8304
+0500
+e378 --
+8304
+0600
+0000
+8304
+0700
+0000
+8304
+08
+----------------------------------
+das sind 4 Bytes für einen Sensorwert
+7a45
+e378 
+
+die in der richtigen reihenfolge mit hexdump von IEEE754 in Zahl gewandelt
+
+    > echo -ne "\xe3\x78\x7a\x45" | hexdump -e '1/4 "%f" "\n"'
+    > 4007,555420
+
+   4007.55541992 < ist das Ergebnis aus der sensor_auswertung.xls
+   und das passt ja ganz gut
+ 
+Seriennummer Ausgeben 
+ echo $(( 16#$hexNum ))
+hannak@linux:~/Downloads/WISE Studio V1.01.03> echo $(( 16#00a9614c ))
+11100492
+
+
+
+
+-----------------------------------------------------------------
+cat ./input.base64 | base64 -d  | xxd   -p -c1 > ./hex
+
+cat ./input.base64 | base64 -d  | xxd   -ps  -c1 | tee ./hex | wc
