@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var dcl571Body = `{"applicationID":"1","applicationName":"AdvantechNode","deviceName":"4610PNode","devEUI":"dP5I//9Edu8=","rxInfo":[],"txInfo":{"frequency":868500000,"modulation":"LORA","loRaModulationInfo":{"bandwidth":125,"spreadingFactor":9,"codeRate":"4/5","polarizationInversion":false}},"adr":false,"dr":3,"fCnt":1316,"fPort":1,"data":"AQwAAKkAgwQBAExhgwQCAOUHgwQDAB0HgwQEAHpFgwQFAON4gwQGAAAAgwQHAAAAgwQIAIBAgwQJAOflgwQKAJlAgwQLAG7OgwQMAI0/gwQNAKH5gwQOAKBCgwQPAAAA","objectJSON":"","tags":{},"confirmedUplink":false,"devAddr":"/0R27w==","publishedAt":"2021-09-15T12:43:37.823217391Z"}`
+var dcl571Body = `{"applicationID":"1","applicationName":"AdvantechNode","deviceName":"4610PNode","devEUI":"dP5I//9Edu8=","rxInfo":[],"txInfo":{"frequency":868500000,"modulation":"LORA","loRaModulationInfo":{"bandwidth":125,"spreadingFactor":9,"codeRate":"4/5","polarizationInversion":false}},"adr":false,"dr":3,"fCnt":1316,"fPort":1,"data":"gc1PAAcHAgAAAAAAAAcnAgAAAAAANAofIACAAAAVgNx/NAo/IACAAAAGgPl/EAIBAIMEAACpAIMEAQBMYYMEAgADQ4MEAwDpGGAHFgJigKV2YTU=","objectJSON":"","tags":{},"confirmedUplink":false,"devAddr":"/0R27w==","publishedAt":"2021-09-15T12:43:37.823217391Z"}`
 
 func TestLDDS75Handling(t *testing.T) {
 	connectorClient := new(mocks.Client)
@@ -88,7 +88,7 @@ func TestDCL571Handling(t *testing.T) {
 		"foothing",
 		"waterlevel",
 		"waterlevel",
-		"0.402806",
+		"13.109731",
 		mock.AnythingOfType("time.Time")).Return(nil)
 	connectorClient.On("UpdateThingPropertyValue",
 		mock.MatchedBy(func(in interface{}) bool { return true }),
@@ -96,39 +96,7 @@ func TestDCL571Handling(t *testing.T) {
 		"foothing",
 		"pressure",
 		"pressure",
-		"0.000395",
-		mock.AnythingOfType("time.Time")).Return(nil)
-	connectorClient.On("UpdateThingPropertyValue",
-		mock.MatchedBy(func(in interface{}) bool { return true }),
-		connector.InstantiationToken("abc"),
-		"foothing",
-		"pressure",
-		"maxPressure",
-		"4.806449",
-		mock.AnythingOfType("time.Time")).Return(nil)
-	connectorClient.On("UpdateThingPropertyValue",
-		mock.MatchedBy(func(in interface{}) bool { return true }),
-		connector.InstantiationToken("abc"),
-		"foothing",
-		"pressure",
-		"minPressure",
-		"1.109181",
-		mock.AnythingOfType("time.Time")).Return(nil)
-	connectorClient.On("UpdateThingPropertyValue",
-		mock.MatchedBy(func(in interface{}) bool { return true }),
-		connector.InstantiationToken("abc"),
-		"foothing",
-		"pressure",
-		"pressureUpperLimit",
-		"0.392996",
-		mock.AnythingOfType("time.Time")).Return(nil)
-	connectorClient.On("UpdateThingPropertyValue",
-		mock.MatchedBy(func(in interface{}) bool { return true }),
-		connector.InstantiationToken("abc"),
-		"foothing",
-		"pressure",
-		"pressureLowerLimit",
-		"0.000000",
+		"0.012856",
 		mock.AnythingOfType("time.Time")).Return(nil)
 
 	fr := mux.NewRouter()
