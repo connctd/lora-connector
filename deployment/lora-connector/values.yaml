@@ -36,7 +36,7 @@ service:
 
 ingress:
   enabled: true
-  className: "ngin-lb"
+  className: "nginx-lb"
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     kubernetes.io/ingress.class: nginx
